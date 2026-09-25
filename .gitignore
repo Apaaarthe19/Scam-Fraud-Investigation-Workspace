@@ -1,0 +1,19 @@
+# Dependencies
+**/node_modules/
+
+# Environment secrets
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.alerts.example
+
+# Build output
+**/dist/
+
+# Runtime uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs and local tooling
+*.log
+.vscode/

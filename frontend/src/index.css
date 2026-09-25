@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+html.dark body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color-scheme: dark;
+}
+
+.admin-workspace {
+  --admin-ink: #1f2933;
+  --admin-rule: #d8d5ce;
+  --admin-paper: #fffefa;
+  color: var(--admin-ink);
+}
+
+.admin-header {
+  border-bottom: 1px solid var(--admin-rule);
+  padding-bottom: 1.5rem;
+}
+
+.admin-metric {
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgb(31 41 51 / 4%);
+}
+
+.admin-review-panel,
+.admin-queue-panel {
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgb(31 41 51 / 5%);
+  background: var(--admin-paper);
+}
+
+.admin-review-table thead {
+  border-bottom: 1px solid var(--admin-rule);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.admin-review-table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+.admin-review-table tbody tr:hover {
+  background: #f7f5f0;
+}
+
+@media (max-width: 640px) {
+  .admin-review-table {
+    min-width: 860px;
+  }
+}
