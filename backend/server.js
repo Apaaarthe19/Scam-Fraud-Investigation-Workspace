@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import mongoSanitize from "express-mongo-sanitize";
@@ -12,6 +13,15 @@ import alertRoutes from "./routes/alertRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
+
+if (process.env.NODE_ENV === "production") {
+	for (const key of ["MONGO_URI", "JWT_SECRET", "CLIENT_URL"]) {
+		if (!process.env[key] || process.env[key].includes("change_this")) {
+			throw new Error(`${key} must be configured with a production value`);
+		}
+	}
+}
+
 connectDB();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,16 +33,17 @@ const configuredClientUrls = (process.env.CLIENT_URL || "http://localhost:5173")
 	.filter(Boolean);
 const isAllowedOrigin = (origin) => !origin
 	|| configuredClientUrls.includes(origin)
-	|| /^http:\/\/localhost:\d+$/.test(origin)
-	|| /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
+	|| (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin))
+	|| (process.env.NODE_ENV !== "production" && /^http:\/\/127\.0\.0\.1:\d+$/.test(origin));
 
+app.use(helmet());
 app.use(cors({
 	origin: (origin, callback) => {
 		if (isAllowedOrigin(origin)) return callback(null, true);
 		return callback(new Error("Origin is not allowed by CORS"));
 	},
 }));
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 app.use(mongoSanitize()); // strips $ and . from user input -> prevents NoSQL injection
 
 // Serve uploaded evidence files

@@ -15,9 +15,11 @@ const storage = multer.diskStorage({
 
 const allowedTypes = [".jpg", ".jpeg", ".png", ".webp", ".pdf"];
 
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
-  if (allowedTypes.includes(ext)) cb(null, true);
+  if (allowedTypes.includes(ext) && allowedMimeTypes.includes(file.mimetype)) cb(null, true);
   else cb(new Error("Only images (jpg/png/webp) or PDF evidence files are allowed"));
 };
 

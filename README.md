@@ -40,6 +40,8 @@ The repository includes a `render.yaml` blueprint for a Render API service and a
 
 Evidence files currently use local disk storage. On hosts with ephemeral filesystems, uploaded evidence can disappear after a restart or redeploy; configure Cloudinary/S3 before relying on evidence in production.
 
+For production, use a long random `JWT_SECRET`, never commit `.env` files, and rotate any credential that has been used locally or shared in a demo. Backend security headers, production CORS restrictions, request-size limits, rate-limited authentication/report routes, MongoDB sanitization, and extension/MIME-checked uploads are enabled.
+
 ### Backend
 ```bash
 cd backend
