@@ -11,6 +11,9 @@ const subscriptionValidation = [
   body("contactValue").trim().notEmpty().withMessage("Contact value is required").isLength({ max: 160 }),
   body("channel").isIn(["email", "sms"]).withMessage("Choose email or SMS alerts"),
   body("destination").trim().notEmpty().withMessage("Alert destination is required").isLength({ max: 160 }),
+  body("frequency").optional().isIn(["instant", "daily"]).withMessage("Choose instant or daily alerts"),
+  body("statusFilters").optional().isArray({ min: 1 }).withMessage("Choose at least one report status"),
+  body("statusFilters.*").optional().isIn(["Pending Review", "Verified", "Under Investigation"]).withMessage("Invalid report status filter"),
 ];
 
 router.use(protect);

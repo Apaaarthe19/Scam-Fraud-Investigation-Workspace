@@ -17,3 +17,11 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const ingestionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  message: { message: "Threat feed rate limit exceeded" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

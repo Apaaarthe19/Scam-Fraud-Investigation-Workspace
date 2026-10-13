@@ -26,6 +26,10 @@ const reportSchema = new mongoose.Schema(
       upiId: { type: String },
     },
     amountLost: { type: Number, default: 0 },
+    severity: { type: String, enum: ["Low", "Medium", "High", "Critical"], default: "Medium" },
+    urgency: { type: String, enum: ["Routine", "Soon", "Immediate"], default: "Routine" },
+    occurredAt: { type: Date },
+    assignedDepartment: { type: String, trim: true, maxlength: 120, default: "" },
     evidenceUrls: [{ type: String }], // uploaded screenshots/proof
     location: {
       text: { type: String, trim: true },
@@ -52,5 +56,6 @@ const reportSchema = new mongoose.Schema(
 );
 
 reportSchema.index({ title: "text", description: "text" });
+reportSchema.index({ "location.lat": 1, "location.lng": 1, status: 1, category: 1 });
 
 export default mongoose.model("Report", reportSchema);

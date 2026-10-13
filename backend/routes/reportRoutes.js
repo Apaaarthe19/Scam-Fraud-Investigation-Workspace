@@ -10,6 +10,8 @@ import {
   getStats,
   lookupContact,
   exportAuditTrail,
+  exportReports,
+  analyzeScamText,
 } from "../controllers/reportController.js";
 import { protect, adminOnly } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -25,6 +27,7 @@ const reportValidation = [
 ];
 
 router.get("/lookup", lookupContact); // public safety-check endpoint
+router.post("/text-check", analyzeScamText); // public heuristic safety check
 router.get("/stats", getStats);
 
 router
@@ -33,6 +36,7 @@ router
   .post(protect, reportLimiter, upload.array("evidence", 5), reportValidation, validate, createReport);
 
 router.get("/:id/audit-export", protect, adminOnly, exportAuditTrail);
+router.get("/export", protect, adminOnly, exportReports);
 router.route("/:id").get(getReportById).delete(protect, deleteReport);
 router.put("/:id/status", protect, adminOnly, updateReportStatus);
 router.put("/:id/upvote", protect, upvoteReport);

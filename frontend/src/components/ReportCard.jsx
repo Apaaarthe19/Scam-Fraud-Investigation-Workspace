@@ -23,7 +23,10 @@ const ReportCard = ({ report }) => (
     <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-2">{report.description}</p>
     <div className="flex items-center justify-between mt-3 text-xs text-gray-400 dark:text-gray-500">
       <span>👍 {report.upvotes?.length || 0} confirmations</span>
-      <span>{new Date(report.createdAt).toLocaleDateString()}</span>
+      <span title={report.occurredAt ? "When the incident occurred" : "When the report was submitted"}>
+        {report.occurredAt ? "Event " : "Reported "}
+        {new Date(report.occurredAt || report.createdAt).toLocaleDateString()}
+      </span>
     </div>
   </Link>
 );

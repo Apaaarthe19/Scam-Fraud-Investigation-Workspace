@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import User from "./models/User.js";
 
-const email = process.env.DEMO_ADMIN_EMAIL || "admin@scamwatch.local";
+const email = process.env.DEMO_ADMIN_EMAIL || "parthg2519@gmail.com";
 const password = process.env.DEMO_ADMIN_PASSWORD || "Admin@12345";
 
 try {

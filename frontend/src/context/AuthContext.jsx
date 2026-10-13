@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    api.post("/auth/logout").catch(() => {});
     localStorage.removeItem("user");
     setUser(null);
   };

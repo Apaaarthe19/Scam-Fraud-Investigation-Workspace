@@ -75,6 +75,8 @@ export const notifyMatchingSubscriptions = async (report) => {
 
   await Promise.all(subscriptions.map(async (subscription) => {
     if (subscription.notifiedReports.some((id) => id.equals(report._id))) return;
+    if (subscription.statusFilters?.length && !subscription.statusFilters.includes(report.status)) return;
+    if (subscription.frequency === "daily" && subscription.lastNotifiedAt && Date.now() - subscription.lastNotifiedAt.getTime() < 24 * 60 * 60 * 1000) return;
 
     try {
       const sent = subscription.channel === "email"
@@ -83,7 +85,7 @@ export const notifyMatchingSubscriptions = async (report) => {
       if (sent) {
         await AlertSubscription.updateOne(
           { _id: subscription._id },
-          { $addToSet: { notifiedReports: report._id } },
+          { $addToSet: { notifiedReports: report._id }, $set: { lastNotifiedAt: new Date() } },
         );
       }
     } catch (error) {

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
+import BrandLogo from "./BrandLogo.jsx";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -15,32 +16,32 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-brand-700 text-white sticky top-0 z-50 shadow-md">
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        <Link to="/" className="font-bold text-lg tracking-tight">
-          🛡️ ScamWatch
+    <nav className="bg-[#12353b] text-white sticky top-0 z-50 shadow-[0_2px_16px_rgb(7_45_50_/_18%)]">
+      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-[4.5rem]">
+        <Link to="/" className="flex items-center gap-2.5 font-bold tracking-tight">
+          <BrandLogo />
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-6">
-          <Link to="/reports" className="hover:text-brand-100">All Reports</Link>
-          <Link to="/map" className="hover:text-brand-100">Hotspot Map</Link>
-          <Link to="/report/new" className="hover:text-brand-100">Report a Scam</Link>
-          {user && <Link to="/dashboard" className="hover:text-brand-100">Dashboard</Link>}
+        <div className="hidden md:flex items-center gap-5 text-sm text-[#d1e5e1]">
+          <Link to="/reports" className="hover:text-white transition-colors">All Reports</Link>
+          <Link to="/map" className="hover:text-white transition-colors">Hotspot Map</Link>
+          <Link to="/report/new" className="hover:text-white transition-colors">Report a Scam</Link>
+          {user && <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>}
           {(user?.role === "admin" || user?.role === "investigator") && (
-            <Link to="/admin" className="hover:text-brand-100">Admin</Link>
+            <Link to="/admin" className="hover:text-white transition-colors">Admin</Link>
           )}
-          <button onClick={toggleTheme} className="rounded-md border border-white/20 px-2.5 py-1.5 hover:bg-white/10" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
+          <button onClick={toggleTheme} className="rounded-md border border-white/20 px-2.5 py-1.5 hover:bg-white/10 transition-colors" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
             {theme === "dark" ? "☀" : "☾"}
           </button>
           {user ? (
-            <button onClick={handleLogout} className="bg-brand-600 px-3 py-1.5 rounded-md hover:bg-brand-500">
+            <button onClick={handleLogout} className="bg-[#e05d46] px-3.5 py-2 rounded-md font-semibold hover:bg-[#ef765e] transition-colors">
               Logout
             </button>
           ) : (
             <>
-              <Link to="/login" className="hover:text-brand-100">Login</Link>
-              <Link to="/register" className="bg-brand-600 px-3 py-1.5 rounded-md hover:bg-brand-500">
+              <Link to="/login" className="hover:text-white transition-colors">Login</Link>
+              <Link to="/register" className="bg-[#e05d46] px-3.5 py-2 rounded-md font-semibold hover:bg-[#ef765e] transition-colors">
                 Sign Up
               </Link>
             </>

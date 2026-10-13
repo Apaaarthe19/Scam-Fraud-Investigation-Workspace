@@ -1,4 +1,6 @@
 import Report from "../models/Report.js";
+import ThreatSignal from "../models/ThreatSignal.js";
+import { normalizeIndicator } from "../utils/normalizeIndicator.js";
 import { notifyMatchingSubscriptions } from "../utils/alertService.js";
 
 // @desc Create a new scam report (with evidence files + auto risk scoring)
@@ -39,15 +41,16 @@ export const createReport = async (req, res) => {
 // @desc Get all reports (with search, category filter, pagination)
 export const getReports = async (req, res) => {
   try {
-    const { search, category, status, page = 1, limit = 10 } = req.query;
+    const { search, category, status, severity, page = 1, limit = 10 } = req.query;
     const query = {};
     if (search) query.$text = { $search: search };
     if (category) query.category = category;
     if (status) query.status = status;
+    if (severity) query.severity = severity;
 
     const reports = await Report.find(query)
       .populate("reportedBy", "name")
-      .sort({ createdAt: -1 })
+      .sort({ occurredAt: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
@@ -159,6 +162,61 @@ export const exportAuditTrail = async (req, res) => {
   }
 };
 
+// @desc Export a filtered investigation queue as CSV
+export const exportReports = async (req, res) => {
+  try {
+    const { search, category, status, severity } = req.query;
+    const query = {};
+    if (search) query.$text = { $search: search };
+    if (category) query.category = category;
+    if (status) query.status = status;
+    if (severity) query.severity = severity;
+
+    const reports = await Report.find(query).populate("reportedBy", "name email").sort({ createdAt: -1 }).limit(5000);
+    const rows = [
+      ["Report ID", "Title", "Category", "Severity", "Urgency", "Status", "Amount lost", "Location", "Reported by", "Created at"],
+      ...reports.map((report) => [
+        report._id,
+        report.title,
+        report.category,
+        report.severity,
+        report.urgency,
+        report.status,
+        report.amountLost || 0,
+        report.location?.text || "",
+        report.reportedBy?.email || report.reportedBy?.name || "Anonymous",
+        report.createdAt?.toISOString() || "",
+      ]),
+    ];
+    const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")).join("\r\n");
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=\"scam-reports-export.csv\"");
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc Score suspicious SMS, email, or chat text using explainable heuristics
+export const analyzeScamText = async (req, res) => {
+  const text = String(req.body.text || "").trim();
+  if (text.length < 10) return res.status(400).json({ message: "Provide at least 10 characters of message text" });
+  if (text.length > 5000) return res.status(400).json({ message: "Message text must be 5,000 characters or less" });
+
+  const signals = [
+    { label: "Requests OTP, PIN, password, or verification code", pattern: /\b(otp|pin|password|verification\s+code|cvv)\b/i, weight: 22 },
+    { label: "Creates urgency or threatens account action", pattern: /\b(urgent|immediately|within\s+\d+\s*(minutes?|hours?)|account\s+(blocked|suspended)|last\s+warning)\b/i, weight: 18 },
+    { label: "Requests payment, fee, deposit, or gift card", pattern: /\b(pay|payment|fee|deposit|gift\s*card|send\s+money|transfer)\b/i, weight: 18 },
+    { label: "Promises unrealistic reward, job, loan, or return", pattern: /\b(prize|lottery|guaranteed|double|easy\s+money|work\s+from\s+home|loan\s+approved)\b/i, weight: 16 },
+    { label: "Uses a suspicious link or shortened URL", pattern: /\b(?:https?:\/\/|www\.)\S+|\b(bit\.ly|tinyurl\.com|t\.co)\b/i, weight: 14 },
+    { label: "Impersonates an authority or trusted brand", pattern: /\b(bank|police|tax|customs|government|courier|support|customer\s+care|KYC)\b/i, weight: 12 },
+  ];
+  const matchedSignals = signals.filter((signal) => signal.pattern.test(text));
+  const score = Math.min(matchedSignals.reduce((total, signal) => total + signal.weight, 0), 100);
+  const label = score >= 70 ? "High risk" : score >= 35 ? "Suspicious" : "Low signal";
+  res.json({ score, label, signals: matchedSignals.map(({ label: signalLabel }) => signalLabel), advice: score >= 35 ? "Do not click links, share codes, or send money. Verify through an official channel." : "No strong scam signals were detected, but remain cautious with unexpected messages." });
+};
+
 // @desc Upvote / confirm a report (helps flag repeat scammers)
 export const upvoteReport = async (req, res) => {
   try {
@@ -247,6 +305,11 @@ export const lookupContact = async (req, res) => {
 
     const categories = [...new Set(matches.map((report) => report.category))];
     const statuses = [...new Set(matches.map((report) => report.status))];
+    const normalizedValues = ["phone", "email", "website", "upiId", "domain", "message"].map((type) => normalizeIndicator(type, value));
+    const liveSignals = await ThreatSignal.find({ status: "Published", normalizedValue: { $in: normalizedValues } })
+      .sort({ lastSeen: -1 })
+      .limit(50)
+      .select("source type value title description riskScore confidence lastSeen");
 
     res.json({
       found: matches.length > 0,
@@ -258,6 +321,7 @@ export const lookupContact = async (req, res) => {
       categories,
       statuses,
       reports: matches,
+      liveSignals,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

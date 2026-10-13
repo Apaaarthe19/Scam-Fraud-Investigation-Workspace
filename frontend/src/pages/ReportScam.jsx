@@ -12,6 +12,7 @@ const ReportScam = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "", description: "", category: "Other",
+    severity: "Medium", urgency: "Routine", occurredAt: "", assignedDepartment: "",
     amountLost: "", location: { text: "", lat: null, lng: null },
     scamContact: { phone: "", email: "", website: "", upiId: "" },
     isAnonymous: false,
@@ -36,6 +37,10 @@ const ReportScam = () => {
       fd.append("title", form.title);
       fd.append("description", form.description);
       fd.append("category", form.category);
+      fd.append("severity", form.severity);
+      fd.append("urgency", form.urgency);
+      if (form.occurredAt) fd.append("occurredAt", form.occurredAt);
+      fd.append("assignedDepartment", form.assignedDepartment);
       fd.append("amountLost", form.amountLost || 0);
       fd.append("location", JSON.stringify(form.location));
       fd.append("isAnonymous", form.isAnonymous);
@@ -79,7 +84,19 @@ const ReportScam = () => {
             value={form.amountLost} onChange={(e) => setForm({ ...form, amountLost: e.target.value })} />
         </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <select className="w-full border rounded-lg px-3 py-2" value={form.severity} onChange={(e) => setForm({ ...form, severity: e.target.value })}>
+            {["Low", "Medium", "High", "Critical"].map((value) => <option key={value}>{value}</option>)}
+          </select>
+          <select className="w-full border rounded-lg px-3 py-2" value={form.urgency} onChange={(e) => setForm({ ...form, urgency: e.target.value })}>
+            {["Routine", "Soon", "Immediate"].map((value) => <option key={value}>{value}</option>)}
+          </select>
+          <input type="datetime-local" className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2" value={form.occurredAt} onChange={(e) => setForm({ ...form, occurredAt: e.target.value })} />
+        </div>
+
         <LocationPicker location={form.location} onChange={(location) => setForm({ ...form, location })} />
+
+        <input placeholder="Relevant department or agency (optional)" className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2" value={form.assignedDepartment} onChange={(e) => setForm({ ...form, assignedDepartment: e.target.value })} />
 
         <fieldset className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
           <legend className="text-sm font-medium text-gray-600 dark:text-gray-300 px-1">Scammer Contact Info (if known)</legend>

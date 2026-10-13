@@ -6,13 +6,13 @@ const activeStatuses = ["Pending Review", "Verified", "Under Investigation"];
 
 export const listSubscriptions = async (req, res) => {
   const subscriptions = await AlertSubscription.find({ user: req.user._id })
-    .select("contactType contactValue channel destination enabled createdAt")
+    .select("contactType contactValue channel destination enabled frequency statusFilters createdAt")
     .sort({ createdAt: -1 });
   res.json(subscriptions);
 };
 
 export const createSubscription = async (req, res) => {
-  const { contactType, contactValue, channel, destination } = req.body;
+  const { contactType, contactValue, channel, destination, frequency = "instant", statusFilters } = req.body;
   const normalizedValue = contactValue.trim().toLowerCase();
   const normalizedDestination = destination.trim();
 
@@ -31,6 +31,8 @@ export const createSubscription = async (req, res) => {
       contactValue: normalizedValue,
       channel,
       destination: normalizedDestination,
+      frequency,
+      statusFilters: statusFilters?.length ? statusFilters : undefined,
     });
 
     const activeReports = await Report.find({

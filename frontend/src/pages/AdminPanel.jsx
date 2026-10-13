@@ -25,6 +25,8 @@ const AdminPanel = () => {
   const [savingId, setSavingId] = useState(null);
   const [decisionId, setDecisionId] = useState(null);
   const [noteDrafts, setNoteDrafts] = useState({});
+  const [threatSignals, setThreatSignals] = useState([]);
+  const [threatLoading, setThreatLoading] = useState(true);
 
   const fetchStats = async () => {
     try {
@@ -49,7 +51,20 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchThreatSignals = async () => {
+    setThreatLoading(true);
+    try {
+      const { data } = await api.get("/threats/review", { params: { status: "Pending Review" } });
+      setThreatSignals(data.signals || []);
+    } catch {
+      setThreatSignals([]);
+    } finally {
+      setThreatLoading(false);
+    }
+  };
+
   useEffect(() => { fetchStats(); }, []);
+  useEffect(() => { fetchThreatSignals(); }, []);
 
   useEffect(() => { fetchReports(); }, [filterStatus, page]);
 
@@ -91,6 +106,21 @@ const AdminPanel = () => {
     }
   };
 
+  const handleExport = async () => {
+    const { data } = await api.get("/reports/export", { params: { status: filterStatus, search }, responseType: "blob" });
+    const url = URL.createObjectURL(data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "scam-reports-export.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleThreatStatus = async (signal, status) => {
+    await api.put(`/threats/${signal._id}/status`, { status });
+    setThreatSignals((current) => current.filter((item) => item._id !== signal._id));
+  };
+
   if (user && user.role !== "admin" && user.role !== "investigator") {
     return <p className="text-center py-16 text-gray-500 dark:text-gray-400">Access denied — admins/investigators only.</p>;
   }
@@ -109,6 +139,11 @@ const AdminPanel = () => {
         <Metric label="Active categories" value={stats?.byCategory?.length ?? "-"} detail="Scam patterns tracked" tone="green" />
       </div>
 
+      <section className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4"><div><h3 className="font-bold text-gray-900 dark:text-gray-100">Live threat signal queue</h3><p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Review external feed signals before they appear in public checks.</p></div><span className="text-xs font-semibold text-amber-700 bg-amber-50 rounded-full px-3 py-1">{threatSignals.length} pending</span></div>
+        {threatLoading ? <p className="text-sm text-gray-500">Loading signals...</p> : threatSignals.length === 0 ? <p className="text-sm text-gray-500">No external signals are waiting for review.</p> : <div className="space-y-3">{threatSignals.map((signal) => <div key={signal._id} className="border border-gray-100 dark:border-gray-800 rounded-lg p-3"><div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-sm">{signal.title}</p><span className="text-xs text-gray-500">{signal.type}</span><span className="text-xs text-gray-500">Risk {signal.riskScore}/100</span></div><p className="text-xs text-gray-600 dark:text-gray-300 mt-1 break-all">{signal.value}</p><p className="text-xs text-gray-400 mt-1">Source: {signal.source} · Confidence: {signal.confidence}% · Seen: {new Date(signal.lastSeen).toLocaleString()}</p>{signal.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{signal.description}</p>}</div><div className="flex gap-2 shrink-0"><button type="button" onClick={() => handleThreatStatus(signal, "Published")} className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">Publish</button><button type="button" onClick={() => handleThreatStatus(signal, "Rejected")} className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700">Reject</button></div></div></div>)}</div>}
+      </section>
+
       <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start">
         <section className="admin-review-panel bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 overflow-hidden">
           <div className="p-4 md:p-5 border-b border-gray-100 dark:border-gray-800">
@@ -117,6 +152,7 @@ const AdminPanel = () => {
               <input className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100" placeholder="Search reports..." value={search} onChange={(event) => setSearch(event.target.value)} />
               <button className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">Search</button>
               <select className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm" value={filterStatus} onChange={(event) => { setPage(1); setFilterStatus(event.target.value); }}><option value="">All statuses</option>{statuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+              <button type="button" onClick={handleExport} className="border border-brand-200 text-brand-700 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-brand-50">Export CSV</button>
             </form>
           </div>
 

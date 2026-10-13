@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -10,6 +11,7 @@ import authRoutes from "./routes/authRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
+import threatRoutes from "./routes/threatRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
@@ -42,7 +44,9 @@ app.use(cors({
 		if (isAllowedOrigin(origin)) return callback(null, true);
 		return callback(new Error("Origin is not allowed by CORS"));
 	},
+	credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json({ limit: "100kb" }));
 app.use(mongoSanitize()); // strips $ and . from user input -> prevents NoSQL injection
 
@@ -55,6 +59,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/reports/:reportId/comments", commentRoutes);
 app.use("/api/alerts", alertRoutes);
+app.use("/api/threats", threatRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

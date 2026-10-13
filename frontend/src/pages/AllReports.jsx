@@ -36,7 +36,13 @@ const AllReports = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      <h2 className="text-2xl font-bold mb-6">All Scam Reports</h2>
+      <div className="mb-6">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#087f78]">Latest activity</p>
+        <h2 className="text-2xl font-bold mt-1">Recent scam events</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          Reports are ordered by when the incident happened, with newest events first.
+        </p>
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input

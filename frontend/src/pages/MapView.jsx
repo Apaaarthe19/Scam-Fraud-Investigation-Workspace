@@ -12,6 +12,9 @@ const getCoordinates = (location) => {
 
 const MapView = () => {
   const [reports, setReports] = useState([]);
+  const [category, setCategory] = useState("All");
+  const [status, setStatus] = useState("All");
+  const [severity, setSeverity] = useState("All");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +23,14 @@ const MapView = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const mappedReports = reports.map((report) => ({ report, coordinates: getCoordinates(report.location) })).filter((item) => item.coordinates);
+  const mappedReports = reports
+    .filter((report) => category === "All" || report.category === category)
+    .filter((report) => status === "All" || report.status === status)
+    .filter((report) => severity === "All" || report.severity === severity)
+    .map((report) => ({ report, coordinates: getCoordinates(report.location) }))
+    .filter((item) => item.coordinates);
+  const categories = [...new Set(reports.map((report) => report.category))];
+  const statuses = [...new Set(reports.map((report) => report.status))];
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 md:py-10">
@@ -28,6 +38,11 @@ const MapView = () => {
         <p className="text-xs font-bold uppercase tracking-widest text-brand-600">Geographic intelligence</p>
         <h2 className="text-2xl font-bold mt-1">Scam hotspot map</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Reports with verified map coordinates appear here. Older text-only locations are kept in the report list.</p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <select aria-label="Filter map by category" value={category} onChange={(event) => setCategory(event.target.value)} className="border rounded-lg px-3 py-2 text-sm"><option>All</option>{categories.map((value) => <option key={value}>{value}</option>)}</select>
+        <select aria-label="Filter map by status" value={status} onChange={(event) => setStatus(event.target.value)} className="border rounded-lg px-3 py-2 text-sm"><option>All</option>{statuses.map((value) => <option key={value}>{value}</option>)}</select>
+        <select aria-label="Filter map by severity" value={severity} onChange={(event) => setSeverity(event.target.value)} className="border rounded-lg px-3 py-2 text-sm"><option>All</option>{["Low", "Medium", "High", "Critical"].map((value) => <option key={value}>{value}</option>)}</select>
       </div>
       <div className="h-[62vh] min-h-[420px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100">
         <MapContainer center={[20.5937, 78.9629]} zoom={4} scrollWheelZoom className="h-full w-full">
