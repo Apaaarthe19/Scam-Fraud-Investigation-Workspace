@@ -36,7 +36,7 @@ The repository includes a `render.yaml` blueprint for a Render API service and a
 2. Push this repository to GitHub and create a new Render Blueprint from the repository.
 3. Set the secret environment values requested by Render: `MONGO_URI`, `DEMO_ADMIN_EMAIL`, and `DEMO_ADMIN_PASSWORD`. Add SMTP or Twilio values only if alerts are needed.
 4. Deploy both services. The frontend uses `https://scamwatch-api.onrender.com/api` and the API allows `https://scamwatch-web.onrender.com` as configured in `render.yaml`.
-5. After deployment, run the admin seed against the hosted API's database from a secure local shell, or create the admin directly in the production database. Never use the documented demo password in production.
+5. After deployment, run the admin seed against the hosted database from a secure local shell with the production environment variables set. Never put these values in Netlify, the frontend, `netlify.toml`, or source control.
 
 Evidence files currently use local disk storage. On hosts with ephemeral filesystems, uploaded evidence can disappear after a restart or redeploy; configure Cloudinary/S3 before relying on evidence in production.
 
@@ -89,12 +89,7 @@ cd backend
 npm run seed:admin
 ```
 
-Demo login:
-
-- Email: `admin@scamwatch.local`
-- Password: `Admin@12345`
-
-These defaults are for local development only. Set `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` in the backend environment before using the seed command anywhere else.
+Before running the seed command, set `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` in the backend environment. The seed command does not provide fallback credentials, so an accidental production run cannot create a known default admin account.
 
 ### PWA placeholder icons
 The frontend currently uses `frontend/public/pwa-192x192.svg` and `frontend/public/pwa-512x512.svg` as placeholder install icons. Replace these with branded production icons and update the paths in `frontend/vite.config.js` before release.

@@ -3,8 +3,12 @@ import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import User from "./models/User.js";
 
-const email = process.env.DEMO_ADMIN_EMAIL || "parthg2519@gmail.com";
-const password = process.env.DEMO_ADMIN_PASSWORD || "Admin@12345";
+const email = process.env.DEMO_ADMIN_EMAIL;
+const password = process.env.DEMO_ADMIN_PASSWORD;
+
+if (!email || !password) {
+  throw new Error("DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD must be set before seeding an admin");
+}
 
 try {
   await connectDB();
